@@ -7,7 +7,7 @@ importall Objects
 
 export createdisks, createwalls
 
-@doc doc"""Creates an random Array(Vector) of *dimension* dim with limits: liminf, limsup""" ->
+@doc """Creates an random Array(Vector) of *dimension* dim with limits: liminf, limsup""" ->
 function randuniform(a, b, c=1)
     a + rand(c)*(b - a)
 end
@@ -25,8 +25,8 @@ function createdisk(Lx1, Lx2, Ly1, Ly2, vmin, vmax, N)
     deltax = Lx2 - Lx1
     deltay = Ly2 - Ly1
     radius_max = (deltax*deltay/(4*N))^(1/2.)
-    radius = randuniform(radius_max*0.2,radius_max*0.8)[1]
-    mass = randuniform(0.5,1.0)[1]
+    radius = 0.5
+    mass = 1
     cotainfx = Lx1 + radius
     cotasupx = Lx2 - radius
     cotainfy = Ly1 + radius
@@ -38,7 +38,7 @@ function createdisk(Lx1, Lx2, Ly1, Ly2, vmin, vmax, N)
     p
 end
 
-@doc doc"""Creates N Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random
+@doc """Creates N Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random
 velocity between vmin and vmax"""->
 function createdisks(N, Lx1, Lx2, Ly1, Ly2, vmin, vmax)
     p = createdisk(Lx1, Lx2, Ly1, Ly2, vmin, vmax, N)
