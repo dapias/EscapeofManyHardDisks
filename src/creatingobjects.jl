@@ -21,27 +21,46 @@ end
 
 @doc doc"""Creates a Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random velocity
 between vmim and vmax"""->
-function createdisk(Lx1, Lx2, Ly1, Ly2, vmin, vmax, N)
+function createdisk(Lx1, Lx2, Ly1, Ly2, N)
     deltax = Lx2 - Lx1
     deltay = Ly2 - Ly1
-    radius_max = (deltax*deltay/(4*N))^(1/2.)
     radius = 0.5
-    mass = 1
+    mass = 1.0
     cotainfx = Lx1 + radius
     cotasupx = Lx2 - radius
     cotainfy = Ly1 + radius
     cotasupy = Ly2 - radius
     x = randuniform(cotainfx, cotasupx)
     y = randuniform(cotainfy, cotasupy)
-    v = randuniform(vmin, vmax, 2)
+    v = [0.,0.]
     p = Disk([x,y],v,radius, mass)
     p
 end
+
+function microcanonicalsampling(arreglo, etotal, masas)
+  function energia(momentos, masas)
+    momentos = momentos .^ 2./2.
+    e = 0
+    for i in 1:length(momentos)
+      j = ceil(i/2)
+      e += momentos[i]/masas[j]
+    end
+    e
+  end
+end
+
+
+
+
+
+
+
 
 @doc """Creates N Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random
 velocity between vmin and vmax"""->
 function createdisks(N, Lx1, Lx2, Ly1, Ly2, vmin, vmax)
     p = createdisk(Lx1, Lx2, Ly1, Ly2, vmin, vmax, N)
+    #particulas = Array(typeof(p), N)
     particulas = [p]
     for i in 2:N
         overlap = true
