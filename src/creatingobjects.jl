@@ -19,9 +19,8 @@ function solape(p1::Disk, p2::Disk)
   return r < (p1.radius + p2.radius)
 end
 
-@doc doc"""Creates a Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random velocity
-between vmim and vmax"""->
-function createdisk(Lx1, Lx2, Ly1, Ly2, N, mass, radius)
+@doc doc"""Creates a Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with velocity equal to [0.,0.]"""->
+function createdisk(Lx1, Lx2, Ly1, Ly2, mass, radius)
   deltax = Lx2 - Lx1
   deltay = Ly2 - Ly1
   cotainfx = Lx1 + radius
@@ -35,38 +34,39 @@ function createdisk(Lx1, Lx2, Ly1, Ly2, N, mass, radius)
   p
 end
 
+@doc """Sample in a microcanonical way the energy hypersurface of a system of *N = length(masses)* hard disks. The arguments needed are the
+total energy and an array of masses. The procedure is taken from  Dumont, R., J. Chem. Phys. 95 (12), 1991. pages: 9172-"""->
 function microcanonicalsampling(etotal, masses)
+  #Creo esta función que calcula la energía del sistema dado un arreglo de momentos y uno de masas (el primero con 2 veces la dimensión del segundo)
   function energy(moments, masses)
-    moments = moments .^ 2./2.
+    psquare = moments .^ 2./2.
     e = 0
-    for i in 1:length(moments)
+    for i in 1:length(psquare)
       j = ceil(i/2)  #El 2 corresponde a dividir px y py.
-      e += moments[i]/masses[j]
+      e += psquare[i]/masses[j]
     end
     e
   end
 
-  #Muestreo microcanónico (tomado de Dumont, R., J. Chem. Phys. 95 (12) 9172-)
-  #Uso un vector con distribución normal.
+  #Uso un vector con distribución normal que muestrearía la superficie de una hiperesfera.
   q = randn(2*length(masses))
-  #Calculo el factor de cambio de coordenadas
+  #Calculo el factor de correción por el hecho de que las masas no son iguales. Entonces la superficie es como una hiperelipse.
   N = (etotal/energy(q, masses))^0.5
   #Calculo los momentos con la distribución correcta
   moments = N*q
-
 end
 
 
 @doc """Creates N Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with a random
-velocity between vmin and vmax"""->
+velocity generated with the microcanonical distribution."""->
 function createdisks(N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii)
-  p = createdisk(Lx1, Lx2, Ly1, Ly2, N, masses[1], radii[1])
+  p = createdisk(Lx1, Lx2, Ly1, Ly2, masses[1], radii[1])
   #particulas = Array(typeof(p), N)
   particulas = [p]
   for i in 2:N
     overlap = true
     while(overlap)
-      p = createdisk(Lx1, Lx2, Ly1, Ly2, N, masses[i], radii[i])
+      p = createdisk(Lx1, Lx2, Ly1, Ly2, masses[i], radii[i])
       arreglo = [false]
       for particula in particulas
         test = solape(particula, p)
