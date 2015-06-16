@@ -7,11 +7,7 @@ VERSION < v"0.4-" && using Docile
 
 importall Model
 importall MyCollections
-import Base.isless
 export simulation, energy
-
-#This allow to use the PriorityQueue providing a criterion to select the priority of an Event.
-isless(e1::Event, e2::Event) = e1.tiempo < e2.tiempo
 
 @doc """Calculates the next collision with a wall of a Disk and put it in the Priority Queue with a given label"""->
 function collisions_with_wall!(disk::Disk,paredes::Array{Wall,1},tinitial, tmax, pq, label)
@@ -35,7 +31,7 @@ function initialcollisions!(disks::Array, paredes::Array, tinitial::Number, tmax
   #Puts etiqueta by default equal to zero
 
   for i in 1:length(disks)
-   collisions_with_wall!(disks[i],paredes,tinitial, tmax, pq, 0)
+    collisions_with_wall!(disks[i],paredes,tinitial, tmax, pq, 0)
 
     for j in i+1:length(disks) #Numero de pares sin repetición N(N-1)/2
       dt = dtcollision(disks[i], disks[j])
@@ -56,7 +52,7 @@ function futurecollisions!(disk::Disk, wall::Wall, disks, paredes, tinitial, tma
   #The wall parameter is not used but it is passed to take advantage of the multiple dispatch for futurecollisions!.
 
   collisions_with_wall!(disk,paredes,tinitial, tmax, pq, etiqueta)
-  tiempo = Float64[]
+  #   tiempo = Float64[]
   for p in disks
     if disk != p
       dt = dtcollision(disk, p)
@@ -75,7 +71,7 @@ function futurecollisions!(disk1::Disk, disk2::Disk, disks, paredes, tinitial, t
   collisions_with_wall!(disk1,paredes,tinitial, tmax, pq, etiqueta)
   collisions_with_wall!(disk2,paredes,tinitial, tmax, pq, etiqueta)
 
-  tiempo = Float64[]
+  #tiempo = Float64[]
   for p in disks
     #if (disk1 != p) & (disk2 != p)
     if (disk1 != p)
@@ -86,7 +82,7 @@ function futurecollisions!(disk1::Disk, disk2::Disk, disks, paredes, tinitial, t
     end
   end
 
-  tiempo = Float64[]
+  #tiempo = Float64[]
   for p in disks
     if (disk1 != p) & (disk2 != p)
       dt = dtcollision(disk2, p)
@@ -186,7 +182,7 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
       updatelabels(evento,label)
       moveparticles(disks,event_time-t)
       t = event_time
-#      t = evento.tiempo
+      #      t = evento.tiempo
       push!(tiempo,t)
       collision(evento.referencedisk,evento.diskorwall)
       updateanimationlists(disks, posiciones,velocidades,N)
