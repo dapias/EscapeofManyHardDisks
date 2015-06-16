@@ -1,9 +1,8 @@
+push!(LOAD_PATH,"./")
+
+
 include("./input_parameters.jl")
-include("./main.jl")
-include("./visualization.jl")
-
-
-using HardDisksSimulation
+using Simulation
 using Visual
 
 #In this file the main functions of the project are called, i.e. *simulation* from main.jl and *visualizate* from visualization.jl.
