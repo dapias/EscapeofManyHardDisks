@@ -103,9 +103,9 @@ function energy(masas,velocidades)
   e
 end
 
-function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii)
+function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii,r, h)
   disks = createdisks(N,Lx1,Lx2,Ly1,Ly2,etotal,masses,radii)
-  paredes = createwalls(Lx1,Lx2,Ly1,Ly2)
+  paredes = createwalls(Lx1,Lx2,Ly1,Ly2,r, h)
   posiciones = [disk.r for disk in disks]
   velocidades = [disk.v for disk in disks]
   #masas = [disk.mass for disk in disks]
@@ -171,8 +171,8 @@ end
 to the collider Disk(s); and the element with the highest physical priority (lowest time) is removed
 from the Queue and ignored if it is physically meaningless. The loop goes until the last Event is removed
 from the Data Structure, which is delimited by the maximum time(tmax)."""->
-function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii)
-  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii)
+function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
+  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
   label = 0
   while(!isempty(pq))
     label += 1
@@ -184,7 +184,16 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
       t = event_time
       #      t = evento.tiempo
       push!(tiempo,t)
-      collision(evento.referencedisk,evento.diskorwall)
+
+      #Si al momento de chocar estás en esta región escapas¿?
+      if ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
+        evento.referencedisk.r += evento.referencedisk.v*0.01
+        tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
+        evento.referencedisk.v = [0.,0.]
+        println(tescape)
+      else
+        collision(evento.referencedisk,evento.diskorwall)
+      end
       updateanimationlists(disks, posiciones,velocidades,N)
       futurecollisions!(evento.referencedisk, evento.diskorwall, disks, paredes, t, tmax, pq,label)
     end

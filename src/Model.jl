@@ -131,12 +131,12 @@ end
 
 @doc doc"""Creates the box in which Disks will be enclosed. Its horizontal boundaries are at Lx1 and Lx2
 (Lx1 < Lx2). Its vertical boundaries are at Ly1 and Ly2 (Ly1 < Ly2)."""->
-function createwalls(Lx1,Lx2,Ly1,Ly2)
+function createwalls(Lx1,Lx2,Ly1,Ly2, r, h)
   arreglo = Array(Wall,4)
   arreglo[1] = VerticalWall(Lx1,[Ly1,Ly2])
-  arreglo[2] = VerticalWall(Lx2,[Ly1,Ly2])
+  arreglo[2] = VerticalWall(Lx2,[Ly1,Ly2 - (r + h/2.)])
   arreglo[3] = HorizontalWall([Lx1,Lx2],Ly1)
-  arreglo[4] = HorizontalWall([Lx1,Lx2],Ly2)
+  arreglo[4] = HorizontalWall([Lx1,Lx2 - (r + h/2.) ],Ly2)
   arreglo
 end
 
@@ -199,7 +199,7 @@ end
 
 @doc doc"""Update the velocity vector of a disk (Disk.v) after it collides with a VerticalWall."""->
 function collision(p1::Disk, V::VerticalWall )
-    p1.v = [-p1.v[1], p1.v[2]]
+        p1.v = [-p1.v[1], p1.v[2]]
 end
 
 @doc doc"""Update the velocity vector of a disk (Disk.v) after it collides with a HorizontallWall."""->
