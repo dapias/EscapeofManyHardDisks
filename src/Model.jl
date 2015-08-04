@@ -10,7 +10,7 @@ abstract Object
 abstract Wall <: Object
 
 @doc doc"""Type with attributes position(r), velocity, radius, mass and label. Both position and velocity
-are vectors. The label attribute corresponds to the cycle within the main loop in which the Disk suffered
+are vectors. The label lastcollision corresponds to the cycle within the main loop in which the Disk suffered
 its last collision (see simulacionanimada in *main.jl*) """->
 type Disk <:Object
   r::Array{Float64,1}
@@ -39,7 +39,7 @@ type HorizontalWall <:Wall
 end
 
 
-@doc doc"""Type with attributes time, collider1, collider2 and label. The label makes reference to the cycle
+@doc """Type with attributes time, collider1, collider2 and label. The label makes reference to the cycle
 within the main loop in which the event was predicted (see simulacionanimada in main.jl)."""->
 type Event
   #tiempo :: Number
@@ -60,7 +60,7 @@ function solape(p1::Disk, p2::Disk)
   return r < (p1.radius + p2.radius)
 end
 
-@doc doc"""Creates a Disks enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with velocity equal to [0.,0.]"""->
+@doc """Creates a Disk enclosed in the box with boundaries at Lx1, Lx2, Ly1, Ly2; and with velocity equal to [0.,0.]"""->
 function createdisk(Lx1, Lx2, Ly1, Ly2, mass, radius)
   deltax = Lx2 - Lx1
   deltay = Ly2 - Ly1
@@ -78,7 +78,7 @@ end
 @doc """Sample in a microcanonical way the energy hypersurface of a system of *N = length(masses)* hard disks. The arguments needed are the
 total energy and an array of masses. The procedure is taken from  Dumont, R., J. Chem. Phys. 95 (12), 1991. pages: 9172-"""->
 function microcanonicalsampling(etotal, masses)
-  #Creo esta función que calcula la energía del sistema dado un arreglo de momentos y uno de masas (el primero con 2 veces la dimensión del segundo)
+  #Wsta función que calcula la energía del sistema dado un arreglo de momentos y uno de masas (el primero con 2 veces la dimensión del segundo)
   function energy(moments, masses)
     psquare = moments .^ 2./2.
     e = 0
@@ -129,8 +129,8 @@ function createdisks(N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii)
   particulas
 end
 
-@doc doc"""Creates the box in which Disks will be enclosed. Its horizontal boundaries are at Lx1 and Lx2
-(Lx1 < Lx2). Its vertical boundaries are at Ly1 and Ly2 (Ly1 < Ly2)."""->
+@doc """Creates the box in which Disks will be enclosed. Its horizontal boundaries are at Lx1 and Lx2
+(Lx1 < Lx2). Its vertical boundaries are at Ly1 and Ly2 (Ly1 < Ly2). Being r+h/2 the length of the hole at each side. """->
 function createwalls(Lx1,Lx2,Ly1,Ly2, r, h)
   arreglo = Array(Wall,4)
   arreglo[1] = VerticalWall(Lx1,[Ly1,Ly2])
@@ -145,8 +145,8 @@ during a time interval dt"""->
 move(p::Disk, dt::Real) = p.r += p.v * dt
 
 @doc doc"""Calculates the time of collision between the Disk and a VerticalWall"""->
+#Hacer test cuando la pared no esté acotada por números positivos.
 function dtcollision(p::Disk, V::VerticalWall)
-    #La pared siempre va a estar acotada por números positivos
     dt = Inf
     if p.v[1] > 0
         if p.r[1] < V.x
@@ -161,9 +161,8 @@ function dtcollision(p::Disk, V::VerticalWall)
 end
 
 
-#Hacer esto con metaprogramming o con un macro!
-
-@doc doc"""Calculates the time of collision between the Disk and a HorizontallWall"""->
+@doc """Calculates the time of collision between the Disk and a HorizontallWall"""->
+#Hacer test cuando la pared no esté acotada por números positivos.
 function dtcollision(p::Disk, H::HorizontalWall)
     dt = Inf
     if p.v[2] > 0
@@ -178,7 +177,7 @@ function dtcollision(p::Disk, H::HorizontalWall)
     dt
 end
 
-@doc doc"""Calculates the time of collision between two Disks."""->
+@doc """Calculates the time of collision between two Disks."""->
 function dtcollision(p1::Disk,p2::Disk)
     deltar = p1.r - p2.r
     deltav = p1.v - p2.v
@@ -197,7 +196,7 @@ function dtcollision(p1::Disk,p2::Disk)
     return dt
 end
 
-@doc doc"""Update the velocity vector of a disk (Disk.v) after it collides with a VerticalWall."""->
+@doc """Update the velocity vector of a disk (Disk.v) after it collides with a VerticalWall."""->
 function collision(p1::Disk, V::VerticalWall )
         p1.v = [-p1.v[1], p1.v[2]]
 end
@@ -207,7 +206,7 @@ function collision(p1::Disk, H::HorizontalWall )
     p1.v = [p1.v[1],-p1.v[2]]
 end
 
-@doc doc"""Update the velocity vector of two Disks after they collides."""->
+@doc """Update the velocity vector of two Disks after they collides."""->
 function collision(p1::Disk, p2::Disk)
     deltar = p1.r - p2.r
     deltav = p1.v - p2.v
