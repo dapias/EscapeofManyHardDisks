@@ -1,5 +1,8 @@
 include("./myordering.jl")
 
+#Este módulo es prácticamente idéntico al que se encuentra en Base.Collections . La diferencia está en la función dequeue!. En éste caso regresa
+#una tupla con la clave y la prioridad asociada. En el caso default regresa únicamente la clave.
+
 module MyCollections
 
 import Base: setindex!, done, get, haskey, isempty, length, next, getindex, start
