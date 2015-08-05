@@ -186,10 +186,10 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
       push!(tiempo,t)
 
       #Si al momento de chocar estás en esta región escapas¿?
-      spacecondition = (r-h/2.)/(r+h/2.) < evento.referencedisk.v[1]/evento.referencedisk.v[2] < 2*r/(r+h/2.)
-      velocitycondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
-      if (spacecondition && velocitycondition)
-        evento.referencedisk.r += evento.referencedisk.v*0.01
+      rcondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
+      vcondition = velocitycondition(evento.referencedisk, Ly2, h)
+      if (rcondition && vcondition)
+        evento.referencedisk.r += evento.referencedisk.v*0.2
         tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
         evento.referencedisk.v = [0.,0.]
         println(tescape)
@@ -203,6 +203,21 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
   push!(tiempo, tmax)
   posiciones, velocidades, tiempo, disks, masas
 end
+
+function velocitycondition(d::Disk, Ly2, h)
+  vx = d.v[1]
+  vy = d.v[2]
+  m = vy/vx
+  theta = atan(m)
+  r = d.radius
+  Lp = Ly2 - (r + h/2.)
+  condition1 = (vx > 0. && vy > 0.)
+  a = Lp + sin(theta)*r - (Ly2 - d.r[2] - cos(theta)*r)/m
+  b = Ly2 - sin(theta)*r  + (d.r[2] - cos(theta)*r - Lp)/m
+  condition2 = a < d.r[1] < b
+  condition1 && condition2
+end
+
 
 
 end
@@ -258,3 +273,6 @@ end
 
 
 # end
+
+# sin(theta)*r/2. + (L - (r + h/2)) - (L - dy - cos(theta)*r/2)/m
+# -sin(theta)*r/2. + L  + (dy - cos(theta)*r/2 - (L - (r + h/2)))/m
