@@ -186,7 +186,9 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
       push!(tiempo,t)
 
       #Si al momento de chocar estás en esta región escapas¿?
-      if ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
+      spacecondition = (r-h/2.)/(r+h/2.) < evento.referencedisk.v[1]/evento.referencedisk.v[2] < 2*r/(r+h/2.)
+      velocitycondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
+      if (spacecondition && velocitycondition)
         evento.referencedisk.r += evento.referencedisk.v*0.01
         tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
         evento.referencedisk.v = [0.,0.]
