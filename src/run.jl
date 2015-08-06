@@ -10,7 +10,7 @@ using Visual
 
 radii = ones(N)*r
 masses = ones(N)*r
-h = 0.1*(Lx2 -Lx1 - 2*r)
+h = 0.1*(L - 2*r)
 #h = 2.
-simulacion = simulation(tinicial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii,r, h);
-@time visualize(simulacion, N, Lx1, Lx2, Ly1, Ly2,r, h, tmax)
+simulacion = simulation(tinicial, tmax, N, L, etotal, masses, radii,r, h);
+@time visualize(simulacion, N, L, r, h, tmax)

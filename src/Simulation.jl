@@ -14,8 +14,8 @@ export simulation, energy
 to the collider Disk(s); and the element with the highest physical priority (lowest time) is removed
 from the Queue and ignored if it is physically meaningless. The loop goes until the last Event is removed
 from the Data Structure, which is delimited by the maximum time(tmax)."""->
-function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
-  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
+function simulation(tinitial::Float64, tmax::Float64, N::Int, L::Float64, etotal::Float64, masses::Array{Float64,1}, radii::Array{Float64,1}, r::Float64, h::Float64)
+  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, L, etotal, masses, radii, r, h)
   label = 0
   while(!isempty(pq))
     label += 1
@@ -28,9 +28,8 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
       #      t = evento.tiempo
       push!(tiempo,t)
 
-      #Si al momento de chocar estás en esta región escapas¿?
-      rcondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
-      vcondition = velocitycondition(evento.referencedisk, Ly2, h)
+      rcondition = ((evento.referencedisk.r[1] > (L - (r + h/2.))) && (evento.referencedisk.r[2] > (L - (r + h/2.)))) #Si al momento de chocar el disco está en esta región escapa
+      vcondition = velocitycondition(evento.referencedisk, L, h)
       if (rcondition && vcondition)
         evento.referencedisk.r += evento.referencedisk.v*0.2
         tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
@@ -48,24 +47,24 @@ function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii
   posiciones, velocidades, tiempo, disks, masas
 end
 
-function velocitycondition(d::Disk, Ly2, h)
+function velocitycondition(d::Disk, L::Float64, h::Float64)
   vx = d.v[1]
   vy = d.v[2]
   m = vy/vx
   theta = atan(m)
   r = d.radius
-  Lp = Ly2 - (r + h/2.)
+  Lp = L - (r + h/2.)
   condition1 = (vx > 0. && vy > 0.)
-  a = Lp + sin(theta)*r - (Ly2 - d.r[2] - cos(theta)*r)/m
-  b = Ly2 - sin(theta)*r  + (d.r[2] - cos(theta)*r - Lp)/m
+  a = Lp + sin(theta)*r - (L - d.r[2] - cos(theta)*r)/m
+  b = L - sin(theta)*r  + (d.r[2] - cos(theta)*r - Lp)/m
   condition2 = a < d.r[1] < b
   condition1 && condition2
 end
 
 
-function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii,r, h)
-  disks = createdisks(N,Lx1,Lx2,Ly1,Ly2,etotal,masses,radii)
-  paredes = createwalls(Lx1,Lx2,Ly1,Ly2,r, h)
+function startsimulation(tinitial, tmax, N, L, etotal, masses, radii,r, h)
+  disks = createdisks(N,L,etotal,masses,radii)
+  paredes = createwalls(L,r, h)
   posiciones = [disk.r for disk in disks]
   velocidades = [disk.v for disk in disks]
   #masas = [disk.mass for disk in disks]
@@ -79,7 +78,7 @@ function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, 
 end
 
 @doc """Calculates the next collision with a wall of a Disk and put it in the Priority Queue with a given label"""->
-function collisions_with_wall!(disk::Disk,paredes::Array{Wall,1},tinitial, tmax, pq, label)
+function collisions_with_wall!(disk::Disk,paredes::Array{Wall,1},tinitial::Float64, tmax::Float64, pq, label::Int)
   tiempo = zeros(4)
   indice = 1
   for pared in paredes
