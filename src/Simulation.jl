@@ -7,7 +7,7 @@ VERSION < v"0.4-" && using Docile
 
 importall Model
 importall MyCollections
-export simulation, energy
+export simulation, energy, velocitycondition
 
 
 @doc doc"""Contains the main loop of the project. The PriorityQueue is filled at each step with Events associated
