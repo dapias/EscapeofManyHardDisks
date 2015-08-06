@@ -9,6 +9,75 @@ importall Model
 importall MyCollections
 export simulation, energy
 
+
+@doc doc"""Contains the main loop of the project. The PriorityQueue is filled at each step with Events associated
+to the collider Disk(s); and the element with the highest physical priority (lowest time) is removed
+from the Queue and ignored if it is physically meaningless. The loop goes until the last Event is removed
+from the Data Structure, which is delimited by the maximum time(tmax)."""->
+function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
+  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
+  label = 0
+  while(!isempty(pq))
+    label += 1
+    evento, event_time = dequeue!(pq)
+    validcollision = validatecollision(evento)
+    if validcollision
+      updatelabels(evento,label)
+      moveparticles(disks,event_time-t)
+      t = event_time
+      #      t = evento.tiempo
+      push!(tiempo,t)
+
+      #Si al momento de chocar estás en esta región escapas¿?
+      rcondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
+      vcondition = velocitycondition(evento.referencedisk, Ly2, h)
+      if (rcondition && vcondition)
+        evento.referencedisk.r += evento.referencedisk.v*0.2
+        tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
+        evento.referencedisk.v = [0.,0.]
+        evento.referencedisk.insidetable = false
+        println(tescape)
+      else
+        collision(evento.referencedisk,evento.diskorwall)
+      end
+      updateanimationlists(disks, posiciones,velocidades,N)
+      futurecollisions!(evento.referencedisk, evento.diskorwall, disks, paredes, t, tmax, pq,label)
+    end
+  end
+  push!(tiempo, tmax)
+  posiciones, velocidades, tiempo, disks, masas
+end
+
+function velocitycondition(d::Disk, Ly2, h)
+  vx = d.v[1]
+  vy = d.v[2]
+  m = vy/vx
+  theta = atan(m)
+  r = d.radius
+  Lp = Ly2 - (r + h/2.)
+  condition1 = (vx > 0. && vy > 0.)
+  a = Lp + sin(theta)*r - (Ly2 - d.r[2] - cos(theta)*r)/m
+  b = Ly2 - sin(theta)*r  + (d.r[2] - cos(theta)*r - Lp)/m
+  condition2 = a < d.r[1] < b
+  condition1 && condition2
+end
+
+
+function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii,r, h)
+  disks = createdisks(N,Lx1,Lx2,Ly1,Ly2,etotal,masses,radii)
+  paredes = createwalls(Lx1,Lx2,Ly1,Ly2,r, h)
+  posiciones = [disk.r for disk in disks]
+  velocidades = [disk.v for disk in disks]
+  #masas = [disk.mass for disk in disks]
+  pq = PriorityQueue()
+  enqueue!(pq,Event(Disk([0.,0.],[0.,0.],1.0),Disk([0.,0.],[0.,0.],1.0), 0),0.)
+  pq = initialcollisions!(disks,paredes,tinitial,tmax, pq)
+  evento, t = dequeue!(pq)
+  #t = evento.tiempo
+  tiempo = [t]
+  return disks, paredes, posiciones, velocidades, masses, pq, t, tiempo
+end
+
 @doc """Calculates the next collision with a wall of a Disk and put it in the Priority Queue with a given label"""->
 function collisions_with_wall!(disk::Disk,paredes::Array{Wall,1},tinitial, tmax, pq, label)
   tiempo = zeros(4)
@@ -50,14 +119,15 @@ of a Disk with a Wall"""->
 function futurecollisions!(disk::Disk, wall::Wall, disks, paredes, tinitial, tmax, pq, etiqueta )
 
   #The wall parameter is not used but it is passed to take advantage of the multiple dispatch for futurecollisions!.
-
-  collisions_with_wall!(disk,paredes,tinitial, tmax, pq, etiqueta)
-  #   tiempo = Float64[]
-  for p in disks
-    if disk != p
-      dt = dtcollision(disk, p)
-      if tinitial + dt < tmax
-        enqueue!(pq,Event(disk, p, etiqueta),tinitial+dt)
+  if disk.insidetable
+    collisions_with_wall!(disk,paredes,tinitial, tmax, pq, etiqueta)
+    #   tiempo = Float64[]
+    for p in disks
+      if (disk != p && p.insidetable)
+        dt = dtcollision(disk, p)
+        if tinitial + dt < tmax
+          enqueue!(pq,Event(disk, p, etiqueta),tinitial+dt)
+        end
       end
     end
   end
@@ -68,57 +138,34 @@ end
 of two Disks."""->
 function futurecollisions!(disk1::Disk, disk2::Disk, disks, paredes, tinitial, tmax, pq, etiqueta)
 
-  collisions_with_wall!(disk1,paredes,tinitial, tmax, pq, etiqueta)
-  collisions_with_wall!(disk2,paredes,tinitial, tmax, pq, etiqueta)
-
-  #tiempo = Float64[]
-  for p in disks
-    #if (disk1 != p) & (disk2 != p)
-    if (disk1 != p)
-      dt = dtcollision(disk1, p)
-      if tinitial + dt < tmax
-        enqueue!(pq,Event(disk1, p, etiqueta),tinitial+dt)
+  if disk1.insidetable
+    collisions_with_wall!(disk1,paredes,tinitial, tmax, pq, etiqueta)
+    for p in disks
+      if (disk1 != p && p.insidetable)
+        dt = dtcollision(disk1, p)
+        if tinitial + dt < tmax
+          enqueue!(pq,Event(disk1, p, etiqueta),tinitial+dt)
+        end
       end
     end
   end
 
-  #tiempo = Float64[]
-  for p in disks
-    if (disk1 != p) & (disk2 != p)
-      dt = dtcollision(disk2, p)
-      if tinitial + dt < tmax
-        enqueue!(pq,Event(disk2, p, etiqueta),tinitial+dt)
+  if disk2.insidetable
+    collisions_with_wall!(disk2,paredes,tinitial, tmax, pq, etiqueta)
+    for p in disks
+      if (((disk1 != p) && (disk2 != p)) && p.insidetable)
+        dt = dtcollision(disk2, p)
+        if tinitial + dt < tmax
+          enqueue!(pq,Event(disk2, p, etiqueta),tinitial+dt)
+        end
       end
     end
   end
   pq
 end
 
-@doc """Calculates the total energy (kinetic) of the system."""->
-function energy(masas,velocidades)
-  e = 0.
-  for i in 1:length(masas)
-    e += masas[i]*norm(velocidades[i])^2/2.
-  end
-  e
-end
 
-function startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii,r, h)
-  disks = createdisks(N,Lx1,Lx2,Ly1,Ly2,etotal,masses,radii)
-  paredes = createwalls(Lx1,Lx2,Ly1,Ly2,r, h)
-  posiciones = [disk.r for disk in disks]
-  velocidades = [disk.v for disk in disks]
-  #masas = [disk.mass for disk in disks]
-  pq = PriorityQueue()
-  enqueue!(pq,Event(Disk([0.,0.],[0.,0.],1.0),Disk([0.,0.],[0.,0.],1.0), 0),0.)
-  pq = initialcollisions!(disks,paredes,tinitial,tmax, pq)
-  evento, t = dequeue!(pq)
-  #t = evento.tiempo
-  tiempo = [t]
-  return disks, paredes, posiciones, velocidades, masses, pq, t, tiempo
-end
-
-@doc """Returns true if the event was predicted after the last collision label of the Disk(s)"""->
+@doc """Returns true if the event was predicted after the lastcollision label of the Disk(s)"""->
 function validatecollision(event::Event)
   validcollision = false
   function validate(d::Disk)
@@ -167,112 +214,15 @@ function updateanimationlists(disks, posiciones,velocidades,N)
 end
 
 
-@doc doc"""Contains the main loop of the project. The PriorityQueue is filled at each step with Events associated
-to the collider Disk(s); and the element with the highest physical priority (lowest time) is removed
-from the Queue and ignored if it is physically meaningless. The loop goes until the last Event is removed
-from the Data Structure, which is delimited by the maximum time(tmax)."""->
-function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
-  disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, etotal, masses, radii, r, h)
-  label = 0
-  while(!isempty(pq))
-    label += 1
-    evento, event_time = dequeue!(pq)
-    validcollision = validatecollision(evento)
-    if validcollision
-      updatelabels(evento,label)
-      moveparticles(disks,event_time-t)
-      t = event_time
-      #      t = evento.tiempo
-      push!(tiempo,t)
-
-      #Si al momento de chocar estás en esta región escapas¿?
-      rcondition = ((evento.referencedisk.r[1] > (Lx2 - (r + h/2.))) && (evento.referencedisk.r[2] > (Ly2 - (r + h/2.))))
-      vcondition = velocitycondition(evento.referencedisk, Ly2, h)
-      if (rcondition && vcondition)
-        evento.referencedisk.r += evento.referencedisk.v*0.2
-        tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
-        evento.referencedisk.v = [0.,0.]
-        println(tescape)
-      else
-        collision(evento.referencedisk,evento.diskorwall)
-      end
-      updateanimationlists(disks, posiciones,velocidades,N)
-      futurecollisions!(evento.referencedisk, evento.diskorwall, disks, paredes, t, tmax, pq,label)
-    end
+@doc """Calculates the total energy (kinetic) of the system."""->
+function energy(masas,velocidades)
+  e = 0.
+  for i in 1:length(masas)
+    e += masas[i]*norm(velocidades[i])^2/2.
   end
-  push!(tiempo, tmax)
-  posiciones, velocidades, tiempo, disks, masas
+  e
 end
-
-function velocitycondition(d::Disk, Ly2, h)
-  vx = d.v[1]
-  vy = d.v[2]
-  m = vy/vx
-  theta = atan(m)
-  r = d.radius
-  Lp = Ly2 - (r + h/2.)
-  condition1 = (vx > 0. && vy > 0.)
-  a = Lp + sin(theta)*r - (Ly2 - d.r[2] - cos(theta)*r)/m
-  b = Ly2 - sin(theta)*r  + (d.r[2] - cos(theta)*r - Lp)/m
-  condition2 = a < d.r[1] < b
-  condition1 && condition2
-end
-
 
 
 end
 
-
-# @doc doc"""Contains the main loop of the project. The PriorityQueue is filled at each step with Events associated
-# to the collider Disk(s); and at the same time the element with the highest physical priority (lowest time) is removed
-# from the Queue and ignored if it is physically meaningless. The loop goes until the last Event is removed
-# from the Data Structure, which is delimited by the maximum time(tmax)."""->
-# function simulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, vmin, vmax)
-#     disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(tinitial, tmax, N, Lx1, Lx2, Ly1, Ly2, vmin, vmax)
-#     label = 0
-
-#     while(!isempty(pq))
-#         label += 1
-#         evento = dequeue!(pq)
-#         if (evento.predictedcollision >= evento.referencedisk.lastcollision)
-#             if typeof(evento.diskorwall) == Disk
-#                 if (evento.predictedcollision >= evento.diskorwall.lastcollision)
-#                     evento.diskorwall.lastcollision = label
-#                     evento.referencedisk.lastcollision = label
-#                     for disk in disks
-#                         move(disk,evento.tiempo - t)
-#                     end
-#                     t = evento.tiempo
-#                     push!(tiempo,t)
-#                     collision(evento.referencedisk,evento.diskorwall)
-#                     for i in 1:N
-#                         push!(posiciones, disks[i].r)
-#                         push!(velocidades, disks[i].v)
-#                     end
-#                     futurecollisions!(evento.referencedisk, evento.diskorwall, disks, paredes, t, tmax, pq,label)
-#                 end
-#             else
-#                 evento.referencedisk.lastcollision = label
-#                 for disk in disks
-#                     move(disk,evento.tiempo - t)
-#                 end
-#                 t = evento.tiempo
-#                 push!(tiempo,t)
-#                 collision(evento.referencedisk,evento.diskorwall)
-#                 for i in 1:N
-#                     push!(posiciones, disks[i].r)
-#                     push!(velocidades, disks[i].v)
-#                 end
-#                 futurecollisions!(evento.referencedisk, disks, paredes, t, tmax, pq, label)
-#             end
-#         end
-#     end
-#     push!(tiempo, tmax)
-#     posiciones, velocidades, tiempo, disks, masas
-# end
-
-
-# end
-
-# sin(theta)*r/2. + (L - (r + h/2)) - (L - dy - cos(theta)*r/2)/m
-# -sin(theta)*r/2. + L  + (dy - cos(theta)*r/2 - (L - (r + h/2)))/m

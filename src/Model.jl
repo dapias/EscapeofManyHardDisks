@@ -18,10 +18,14 @@ type Disk <:Object
   radius::Float64
   mass::Float64
   lastcollision ::Int
+  insidetable::Bool
 end
 
-Disk(r,v,radius) = Disk(r,v,radius,1.0,0) #Fixed mass of 1.0 and label equal to 0 (by default)
-Disk(r,v,radius, mass) = Disk(r,v,radius, mass ,0) #Label equal to 0 (by default)
+#Disk(r,v,radius) = Disk(r,v,radius,1.0,0) #Fixed mass of 1.0 and label equal to 0 (by default)
+#Disk(r,v,radius, mass) = Disk(r,v,radius, mass ,0) #Label equal to 0 (by default)
+Disk(r,v,radius) = Disk(r,v,radius,1.0,0,true)
+Disk(r,v,radius, mass) = Disk(r,v,radius, mass ,0, true) #Label equal to 0 (by default)
+
 
 @doc doc"""Type with attributes x and y. x corresponds to its horizontal position in a Cartesian Plane
 (just a number) and y represents its initial and final height in the Plane (Array of length equal to 2)."""  ->
