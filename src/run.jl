@@ -9,7 +9,7 @@ using Visual
 #Additionally the parameters from input_parameters.jl are called.
 
 radii = ones(N)*r
-masses = ones(N)*r
+masses = ones(N)*mass
 h = 0.1*(L - 2*r)
 #h = 2.
 simulacion = simulation(tinicial, tmax, N, L, etotal, masses, radii,r, h);
