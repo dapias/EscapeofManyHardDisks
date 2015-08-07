@@ -33,7 +33,6 @@ function simulation(tinitial::Float64, tmax::Float64, N::Int, L::Float64, etotal
       if (rcondition && vcondition)
         evento.referencedisk.r += evento.referencedisk.v*0.2
         tescape = t + 2*evento.referencedisk.radius/norm(evento.referencedisk.v)
-        evento.referencedisk.v = [0.,0.]
         evento.referencedisk.insidetable = false
         println(tescape)
       else
