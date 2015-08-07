@@ -1,0 +1,8 @@
+t_initial  : 0.
+t_max : 100.
+radius : 0.5
+mass : 1.0
+e_total: 5.0
+L: 6.27
+nofrealizations : 10
+N: 5
