@@ -7,7 +7,7 @@ VERSION < v"0.4-" && using Docile
 
 importall Model
 importall MyCollections
-export simulation, energy, velocitycondition
+export simulation, energy, velocitycondition, startsimulation, validatecollision, updatelabels, moveparticles, futurecollisions!
 
 
 @doc doc"""Contains the main loop of the project. The PriorityQueue is filled at each step with Events associated
@@ -219,6 +219,10 @@ function energy(masas,velocidades)
     e += masas[i]*norm(velocidades[i])^2/2.
   end
   e
+end
+
+function energy(d::Disk)
+  d.mass*norm(d.v)^2./2.
 end
 
 
