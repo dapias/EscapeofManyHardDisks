@@ -1,5 +1,5 @@
 t_initial  : 0.
-t_max : 100.
+t_max : 1000.
 radius : 0.5
 mass : 1.0
 e_total: 5.0
