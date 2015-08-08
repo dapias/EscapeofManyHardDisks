@@ -25,6 +25,7 @@ function escape_time_and_energy(parameters)
   t_escape = Array(Float64,(N, nofrealizations))
   e_escape = Array(Float64,(N, nofrealizations))
 
+
   for i in 1:nofrealizations
     disks, paredes, posiciones, velocidades, masas, pq, t, tiempo = startsimulation(t_initial, t_max, N, L, e_total, masses, radii, radius, h)
     label = 0
@@ -51,6 +52,9 @@ function escape_time_and_energy(parameters)
           t_escape[escaped_disks, i] = escapetime
           escapeenergy = energy(evento.referencedisk)
           e_escape[escaped_disks, i] = escapeenergy
+          if escaped_disks == N
+            break
+          end
         else
           collision(evento.referencedisk,evento.diskorwall)
         end
@@ -69,6 +73,6 @@ function energy(d::Disk)
   d.mass*norm(d.v)^2./2.
 end
 
-import YAML
-parameters = YAML.load(open("parameters.yaml"))
-escape_time_and_energy(parameters)
+# import YAML
+# parameters = YAML.load(open("parameters.yaml"))
+# escape_time_and_energy(parameters)
