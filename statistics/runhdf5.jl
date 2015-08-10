@@ -10,15 +10,15 @@ nofrealizations = parameters["nofrealizations"]
 
 s = string(now())
 hour = s[end-7:end]
-foldername = "$(today())/$hour/"
+foldername = "Data/$(today())/$hour/"
 filename = "Ensemble_size:$nofrealizations""t_max:""$t_max"
 filepath = "$foldername""$filename"
 
 try
-  mkdir("./$(today())/")
+  mkdir("./Data/$(today())/")
 end
 try
-  mkdir("./$(today())/$hour")
+  mkdir("./Data/$(today())/$hour")
 end
 ##############
 
