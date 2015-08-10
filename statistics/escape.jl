@@ -21,9 +21,12 @@ function escape_time_and_energy(parameters)
   masses = ones(N)*mass
   h = 0.1*(L - 2*radius)
 
+  t_escape = Array(Float64,(N, nofrealizations))
+  e_escape = Array(Float64,(N, nofrealizations))
 
-  t_escape = zeros(N, nofrealizations)
-  e_escape = zeros(N, nofrealizations)
+
+#   t_escape = zeros(N, nofrealizations)
+#   e_escape = zeros(N, nofrealizations)
 
 
   for i in 1:nofrealizations
