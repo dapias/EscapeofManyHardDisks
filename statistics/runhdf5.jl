@@ -26,5 +26,5 @@ end
 createhdf5(filepath, parameters)
 data(filepath, parameters)
 println("Look for the file at the \"$foldername\" folder with the name \"$filename\"")
-#println(Pkg.status())
+println(Pkg.status())
 ################
