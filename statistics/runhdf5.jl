@@ -15,6 +15,9 @@ filename = "Ensemble_size:$nofrealizations""t_max:""$t_max"
 filepath = "$foldername""$filename"
 
 try
+   mkdir("./Data/")
+end
+try
   mkdir("./Data/$(today())/")
 end
 try
